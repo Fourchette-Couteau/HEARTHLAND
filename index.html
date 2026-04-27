@@ -3,449 +3,784 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Hearthland — Jeu de gestion</title>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300&display=swap" rel="stylesheet">
+<title>HEARTHLAND</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@400;600;700&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
 <style>
-:root {
-  --bg: #1a1208;
-  --bg2: #221a0e;
-  --bg3: #2e2210;
-  --panel: #1e1609;
-  --gold: #e8b84b;
-  --gold2: #f5d27a;
-  --gold-dim: #7a5e20;
-  --text: #f0dfa8;
-  --text2: #a8906a;
-  --text3: #6a5540;
-  --green: #4a8a3c;
-  --green2: #6db85c;
-  --red: #a03030;
-  --blue: #2a5a8a;
-  --blue2: #4a8abf;
-  --border: rgba(232,184,75,0.2);
-  --border2: rgba(232,184,75,0.4);
-  --radius: 8px;
+:root{
+  --bg:#07050a;--bg2:#0e0b14;--bg3:#15111e;
+  --panel:#0a0812;--panel2:#100d1a;
+  --gold:#d4a843;--gold2:#f0c866;--gold3:#fff0b0;--gold-dim:#4a3510;--gold-glow:rgba(212,168,67,0.25);
+  --purple:#6b3fa0;--purple2:#9b6fd0;--purple-dim:#2a1640;
+  --red:#8b2020;--red2:#c0392b;--red3:#e74c3c;
+  --teal:#1a6b5a;--teal2:#27ae8a;
+  --text:#e8d5a0;--text2:#a08060;--text3:#5a4530;--text4:#2a1e10;
+  --border:rgba(212,168,67,0.12);--border2:rgba(212,168,67,0.28);--border3:rgba(212,168,67,0.5);
 }
-* { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { width: 100%; height: 100%; background: var(--bg); color: var(--text); font-family: 'Crimson Pro', Georgia, serif; overflow: hidden; }
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-family:'IM Fell English',Georgia,serif;overflow:hidden;}
 
-/* ── BACKGROUND ── */
-body::before {
-  content: '';
-  position: fixed; inset: 0;
-  background: radial-gradient(ellipse at 30% 20%, rgba(80,50,10,0.4) 0%, transparent 60%),
-              radial-gradient(ellipse at 70% 80%, rgba(20,40,80,0.3) 0%, transparent 60%);
-  pointer-events: none;
+/* ─── CANVAS BG ─── */
+#bg{position:fixed;inset:0;z-index:0;pointer-events:none;}
+
+/* ─── APP ─── */
+#app{display:flex;flex-direction:column;height:100vh;position:relative;z-index:1;}
+
+/* ─── HEADER ─── */
+#hdr{
+  display:flex;align-items:stretch;flex-shrink:0;
+  background:linear-gradient(180deg,rgba(4,3,8,0.99) 0%,rgba(8,6,14,0.95) 100%);
+  border-bottom:1px solid var(--border2);
+  position:relative;
 }
+#hdr::after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent 0%,var(--gold) 30%,var(--gold3) 50%,var(--gold) 70%,transparent 100%);
+  opacity:0.5;}
+#logo{display:flex;align-items:center;gap:10px;padding:0 20px;border-right:1px solid var(--border);flex-shrink:0;}
+#logo-crown{font-size:20px;filter:drop-shadow(0 0 8px var(--gold));}
+#logo-text{font-family:'Cinzel Decorative',serif;font-size:15px;font-weight:900;
+  background:linear-gradient(135deg,var(--gold),var(--gold3),var(--gold));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  letter-spacing:3px;text-shadow:none;}
+#res-bar{display:flex;flex:1;overflow-x:auto;}
+#res-bar::-webkit-scrollbar{display:none;}
+.ri{display:flex;align-items:center;gap:6px;padding:0 14px;border-right:1px solid var(--border);min-width:90px;transition:background 0.2s;}
+.ri:hover{background:rgba(212,168,67,0.04);}
+.ri-ico{font-size:15px;filter:drop-shadow(0 0 3px currentColor);}
+.ri-info{display:flex;flex-direction:column;}
+.ri-lbl{font-family:'Cinzel',serif;font-size:8px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;}
+.ri-val{font-family:'Cinzel',serif;font-size:14px;font-weight:700;color:var(--gold2);line-height:1.1;}
+.ri-rate{font-size:9px;line-height:1;}
+.ri-rate.p{color:#5dba78;}.ri-rate.n{color:#e05050;}.ri-rate.z{color:var(--text3);}
+#hdr-right{display:flex;align-items:stretch;border-left:1px solid var(--border);margin-left:auto;}
+.hbtn{padding:0 14px;font-family:'Cinzel',serif;font-size:10px;color:var(--text2);background:none;border:none;border-right:1px solid var(--border);cursor:pointer;letter-spacing:1px;transition:all 0.2s;}
+.hbtn:hover{background:rgba(212,168,67,0.07);color:var(--gold);}
+.hbtn.red:hover{background:rgba(139,32,32,0.15);color:#e05050;}
+#turn-box{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 16px;}
+#turn-lbl{font-family:'Cinzel',serif;font-size:8px;color:var(--text3);letter-spacing:2px;}
+#turn-n{font-family:'Cinzel Decorative',serif;font-size:20px;color:var(--gold2);line-height:1;
+  text-shadow:0 0 12px rgba(212,168,67,0.5);}
 
-/* ── LAYOUT ── */
-#app { display: flex; flex-direction: column; height: 100vh; position: relative; }
-#header { display: flex; align-items: center; gap: 0; border-bottom: 1px solid var(--border); background: rgba(10,8,2,0.7); backdrop-filter: blur(4px); flex-shrink: 0; }
-#header h1 { font-family: 'Cinzel', serif; font-size: 20px; font-weight: 700; color: var(--gold); letter-spacing: 3px; padding: 10px 20px; border-right: 1px solid var(--border); white-space: nowrap; }
-#resources { display: flex; gap: 0; flex: 1; overflow-x: auto; }
-.res-item { display: flex; align-items: center; gap: 8px; padding: 10px 16px; border-right: 1px solid var(--border); transition: background 0.2s; }
-.res-item:hover { background: rgba(232,184,75,0.05); }
-.res-icon { font-size: 18px; }
-.res-info { display: flex; flex-direction: column; }
-.res-label { font-size: 10px; color: var(--text3); letter-spacing: 1px; text-transform: uppercase; font-family: 'Cinzel', serif; }
-.res-val { font-size: 16px; font-weight: 600; color: var(--gold2); line-height: 1; }
-.res-delta { font-size: 11px; color: var(--green2); }
-.res-delta.neg { color: #e07070; }
-#turn-info { margin-left: auto; padding: 10px 20px; font-family: 'Cinzel', serif; font-size: 13px; color: var(--text2); border-left: 1px solid var(--border); white-space: nowrap; }
-#turn-num { color: var(--gold); font-weight: 600; }
+/* ─── TICK ─── */
+#tick{height:2px;background:rgba(0,0,0,0.6);flex-shrink:0;position:relative;overflow:hidden;}
+#tick::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent,transparent 9%,rgba(212,168,67,0.06) 9%,rgba(212,168,67,0.06) 10%);}
+#tf{height:100%;width:0%;background:linear-gradient(90deg,#3a2c0e,var(--gold),var(--gold3));
+  box-shadow:0 0 10px var(--gold),0 0 20px rgba(212,168,67,0.3);transition:width 0.05s linear;}
 
-/* ── TICK BAR ── */
-#tickbar { height: 3px; background: var(--bg3); flex-shrink: 0; }
-#tickfill { height: 100%; background: linear-gradient(90deg, var(--gold-dim), var(--gold)); width: 0%; transition: width 0.08s linear; box-shadow: 0 0 6px rgba(232,184,75,0.5); }
+/* ─── MAIN ─── */
+#main{display:flex;flex:1;overflow:hidden;}
 
-/* ── MAIN AREA ── */
-#main { display: flex; flex: 1; overflow: hidden; }
+/* ─── MAP AREA ─── */
+#map-area{flex:1;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;}
 
-/* ── MAP ── */
-#map-wrap { flex: 1; overflow: auto; display: flex; align-items: center; justify-content: center; padding: 16px; position: relative; }
-#map { display: grid; gap: 3px; }
-.cell {
-  width: 58px; height: 58px;
-  border-radius: 6px;
-  cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 26px;
-  border: 1.5px solid transparent;
-  transition: transform 0.15s, border-color 0.15s, filter 0.15s, box-shadow 0.15s;
-  position: relative;
-  overflow: visible;
+/* map vignette */
+#map-area::before{content:'';position:absolute;inset:0;pointer-events:none;z-index:5;
+  background:radial-gradient(ellipse at center,transparent 55%,rgba(7,5,10,0.7) 100%);}
+
+#map-scroll{overflow:auto;padding:20px;position:relative;z-index:2;}
+#map-scroll::-webkit-scrollbar{width:4px;height:4px;}
+#map-scroll::-webkit-scrollbar-thumb{background:var(--gold-dim);border-radius:2px;}
+#map{display:grid;gap:4px;position:relative;}
+
+/* ─── CELL ─── */
+.cell{
+  width:60px;height:60px;border-radius:6px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  font-size:26px;position:relative;overflow:visible;
+  border:1px solid rgba(0,0,0,0.4);
+  transition:transform 0.12s,filter 0.12s,border-color 0.15s,box-shadow 0.15s;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.04),inset 0 -1px 0 rgba(0,0,0,0.3);
 }
-.cell:hover { transform: scale(1.12); filter: brightness(1.15); z-index: 10; }
-.cell.selected { border-color: var(--gold); box-shadow: 0 0 12px rgba(232,184,75,0.5); transform: scale(1.08); z-index: 10; }
-.cell.pulse { animation: pulse 0.4s ease-out; }
-@keyframes pulse { 0%{transform:scale(1.3);filter:brightness(1.5)} 100%{transform:scale(1);filter:brightness(1)} }
-
-/* terrain colors */
-.t-grass    { background: #1e3d14; }
-.t-forest   { background: #152c0e; }
-.t-water    { background: #0d2440; }
-.t-mountain { background: #302820; }
-.t-desert   { background: #3d2f10; }
-.cell.selected.t-grass    { border-color: #6db85c; box-shadow: 0 0 12px rgba(109,184,92,0.5); }
-.cell.selected.t-forest   { border-color: #4a7a35; box-shadow: 0 0 12px rgba(74,122,53,0.5); }
-.cell.selected.t-water    { border-color: #4a8abf; box-shadow: 0 0 12px rgba(74,138,191,0.5); }
-.cell.selected.t-mountain { border-color: #a09080; box-shadow: 0 0 12px rgba(160,144,128,0.5); }
-.cell.selected.t-desert   { border-color: var(--gold); box-shadow: 0 0 12px rgba(232,184,75,0.5); }
-
-/* ── SIDEBAR ── */
-#sidebar { width: 280px; border-left: 1px solid var(--border); background: rgba(10,8,2,0.6); backdrop-filter: blur(4px); display: flex; flex-direction: column; overflow-y: auto; flex-shrink: 0; }
-#sidebar-header { padding: 14px 16px 10px; border-bottom: 1px solid var(--border); }
-#sidebar-title { font-family: 'Cinzel', serif; font-size: 15px; color: var(--gold); font-weight: 600; }
-#sidebar-sub { font-size: 13px; color: var(--text2); margin-top: 2px; font-style: italic; }
-#sidebar-body { padding: 12px; flex: 1; display: flex; flex-direction: column; gap: 8px; }
-.build-btn {
-  background: rgba(232,184,75,0.05);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 10px 12px;
-  cursor: pointer;
-  width: 100%;
-  text-align: left;
-  color: var(--text);
-  transition: background 0.2s, border-color 0.2s, transform 0.1s;
-  display: flex; align-items: center; gap: 10px;
+.cell::before{content:'';position:absolute;inset:0;border-radius:inherit;
+  background:linear-gradient(160deg,rgba(255,255,255,0.06) 0%,transparent 60%);pointer-events:none;}
+.cell:hover{transform:scale(1.15) translateY(-2px);filter:brightness(1.25);z-index:30;
+  border-color:rgba(212,168,67,0.6);box-shadow:0 6px 20px rgba(0,0,0,0.6),0 0 12px rgba(212,168,67,0.2);}
+.cell.sel{
+  border-color:var(--gold)!important;transform:scale(1.1) translateY(-1px);z-index:20;
+  box-shadow:0 0 0 2px rgba(212,168,67,0.3),0 0 20px rgba(212,168,67,0.4),0 8px 24px rgba(0,0,0,0.7)!important;
 }
-.build-btn:hover:not(:disabled) { background: rgba(232,184,75,0.12); border-color: var(--border2); transform: translateX(3px); }
-.build-btn:active:not(:disabled) { transform: scale(0.98); }
-.build-btn:disabled { opacity: 0.35; cursor: not-allowed; }
-.build-btn .bicon { font-size: 24px; flex-shrink: 0; }
-.build-btn .binfo { flex: 1; }
-.build-btn .bname { font-family: 'Cinzel', serif; font-size: 13px; font-weight: 600; color: var(--gold2); }
-.build-btn .bdesc { font-size: 12px; color: var(--text2); margin-top: 2px; line-height: 1.4; }
-.build-btn .bcost { font-size: 11px; color: var(--text3); margin-top: 4px; }
-.demolish-btn {
-  background: rgba(160,48,48,0.1);
-  border: 1px solid rgba(160,48,48,0.3);
-  border-radius: var(--radius);
-  padding: 8px 12px;
-  cursor: pointer;
-  color: #e07070;
-  font-family: 'Cinzel', serif;
-  font-size: 12px;
-  width: 100%;
-  transition: background 0.2s;
+.cell.anim-build{animation:aBuild 0.5s ease-out;}
+@keyframes aBuild{0%{transform:scale(1.5);filter:brightness(2.5) saturate(2)}100%{transform:scale(1);filter:brightness(1)}}
+.cell.anim-hit{animation:aHit 0.4s ease-out;}
+@keyframes aHit{0%,100%{filter:brightness(1)}30%{filter:brightness(2.5) hue-rotate(-30deg) saturate(3)}}
+
+/* terrain textures */
+.tg{background:radial-gradient(circle at 35% 35%,#243d1a,#162b0e) !important;}
+.tf{background:radial-gradient(circle at 35% 35%,#112608,#0a1c05) !important;}
+.tw{background:radial-gradient(circle at 35% 35%,#0e2f52,#071e3a) !important;}
+.tm{background:radial-gradient(circle at 35% 35%,#322b22,#201b14) !important;}
+.td{background:radial-gradient(circle at 35% 35%,#453515,#2e220a) !important;}
+
+.cell.sel.tg{border-color:#6db85c!important;box-shadow:0 0 20px rgba(109,184,92,0.5),0 0 0 2px rgba(109,184,92,0.2)!important;}
+.cell.sel.tw{border-color:#4a9abf!important;box-shadow:0 0 20px rgba(74,154,191,0.5),0 0 0 2px rgba(74,154,191,0.2)!important;}
+.cell.sel.tm{border-color:#b0a090!important;box-shadow:0 0 20px rgba(176,160,144,0.5),0 0 0 2px rgba(176,160,144,0.2)!important;}
+.cell.sel.td{border-color:var(--gold)!important;}
+
+/* cell overlays */
+.c-hp{position:absolute;bottom:3px;left:4px;right:4px;height:3px;border-radius:2px;background:rgba(0,0,0,0.5);overflow:hidden;}
+.c-hp-f{height:100%;border-radius:2px;transition:width 0.4s,background 0.4s;}
+.c-lv{position:absolute;top:2px;right:2px;background:rgba(0,0,0,0.75);border:1px solid var(--gold-dim);
+  color:var(--gold2);font-size:8px;font-weight:700;border-radius:3px;padding:0 3px;
+  font-family:'Cinzel',serif;line-height:14px;}
+.c-block{position:absolute;top:-6px;left:2px;font-size:11px;filter:drop-shadow(0 0 2px #e0a000);}
+.c-atk{position:absolute;top:-6px;right:2px;font-size:11px;animation:flt 1s ease-in-out infinite alternate;filter:drop-shadow(0 0 4px #e74c3c);}
+@keyframes flt{from{transform:translateY(0)}to{transform:translateY(-3px)}}
+
+/* ─── SIDEBAR ─── */
+#sb{
+  width:280px;flex-shrink:0;display:flex;flex-direction:column;overflow:hidden;
+  background:linear-gradient(180deg,rgba(6,4,11,0.98),rgba(10,8,18,0.95));
+  border-left:1px solid var(--border2);position:relative;
 }
-.demolish-btn:hover { background: rgba(160,48,48,0.2); }
-.bstat { display: flex; justify-content: space-between; align-items: center; font-size: 13px; padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
-.bstat:last-child { border-bottom: none; }
-.bstat-label { color: var(--text2); }
-.bstat-val { color: var(--gold2); font-weight: 600; }
-.badge { display: inline-block; background: rgba(232,184,75,0.15); border: 1px solid var(--border); border-radius: 4px; padding: 2px 8px; font-family: 'Cinzel', serif; font-size: 10px; color: var(--gold); letter-spacing: 1px; text-transform: uppercase; }
-.section-title { font-family: 'Cinzel', serif; font-size: 11px; color: var(--text3); letter-spacing: 2px; text-transform: uppercase; margin: 4px 0 2px; }
-.empty-hint { font-size: 13px; color: var(--text3); font-style: italic; line-height: 1.6; text-align: center; margin-top: 20px; }
+#sb::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:0.4;}
 
-/* ── BOTTOM BAR ── */
-#bottombar { border-top: 1px solid var(--border); padding: 6px 16px; background: rgba(10,8,2,0.7); display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
-#msg { font-size: 13px; color: var(--text2); font-style: italic; flex: 1; transition: color 0.3s; }
-#msg.good { color: var(--green2); }
-#msg.bad { color: #e07070; }
-#pause-btn { font-family: 'Cinzel', serif; font-size: 12px; color: var(--gold); background: transparent; border: 1px solid var(--border); border-radius: 4px; padding: 4px 12px; cursor: pointer; transition: background 0.2s; }
-#pause-btn:hover { background: rgba(232,184,75,0.1); }
+/* xp strip */
+#xp-strip{padding:8px 14px 6px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.xp-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;}
+.xp-lv{font-family:'Cinzel',serif;font-size:10px;color:var(--gold);letter-spacing:1px;}
+.xp-pts{font-size:10px;color:var(--text3);}
+.xp-track{height:5px;background:rgba(255,255,255,0.05);border-radius:3px;overflow:hidden;position:relative;}
+.xp-fill{height:100%;border-radius:3px;
+  background:linear-gradient(90deg,#6b3fa0,#c084fc,#e9d5ff);
+  box-shadow:0 0 8px rgba(168,85,247,0.5);transition:width 0.6s cubic-bezier(0.4,0,0.2,1);}
 
-/* ── FLOATING POPUP ── */
-.popup { position: fixed; pointer-events: none; font-family: 'Cinzel', serif; font-size: 13px; font-weight: 600; color: var(--gold2); text-shadow: 0 1px 4px rgba(0,0,0,0.8); animation: floatUp 1.2s ease-out forwards; z-index: 999; }
-@keyframes floatUp { 0%{opacity:1;transform:translateY(0)} 80%{opacity:1} 100%{opacity:0;transform:translateY(-50px)} }
+/* sb header */
+#sb-hd{padding:10px 14px 8px;border-bottom:1px solid var(--border);flex-shrink:0;}
+#sb-title{font-family:'Cinzel',serif;font-size:14px;color:var(--gold2);font-weight:700;letter-spacing:0.5px;}
+#sb-sub{font-size:12px;color:var(--text3);font-style:italic;margin-top:2px;}
 
-/* ── TOOLTIP ── */
-.tooltip { position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); background: rgba(10,8,2,0.97); border: 1px solid var(--border2); border-radius: 6px; padding: 8px 12px; font-size: 12px; color: var(--text); white-space: nowrap; pointer-events: none; z-index: 100; font-family: 'Cinzel', serif; }
-.tooltip::after { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border: 5px solid transparent; border-top-color: var(--border2); }
+/* sb body */
+#sb-body{flex:1;overflow-y:auto;padding:10px 12px;display:flex;flex-direction:column;gap:6px;}
+#sb-body::-webkit-scrollbar{width:3px;}
+#sb-body::-webkit-scrollbar-thumb{background:var(--gold-dim);border-radius:2px;}
 
-/* ── SCROLLBAR ── */
-::-webkit-scrollbar { width: 4px; height: 4px; }
-::-webkit-scrollbar-track { background: var(--bg); }
-::-webkit-scrollbar-thumb { background: var(--gold-dim); border-radius: 2px; }
+.slbl{font-family:'Cinzel',serif;font-size:8px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin:4px 0 2px;}
+
+/* build buttons */
+.bbtn{
+  background:linear-gradient(135deg,rgba(212,168,67,0.04),rgba(212,168,67,0.02));
+  border:1px solid var(--border);border-radius:8px;
+  padding:9px 11px;cursor:pointer;width:100%;text-align:left;color:var(--text);
+  transition:background 0.18s,border-color 0.18s,transform 0.12s,box-shadow 0.18s;
+  display:flex;align-items:center;gap:9px;position:relative;overflow:hidden;
+}
+.bbtn::before{content:'';position:absolute;inset:0;border-radius:inherit;
+  background:linear-gradient(135deg,rgba(255,255,255,0.03),transparent);pointer-events:none;}
+.bbtn:hover:not(:disabled){
+  background:linear-gradient(135deg,rgba(212,168,67,0.12),rgba(212,168,67,0.06));
+  border-color:var(--border2);transform:translateX(3px);
+  box-shadow:0 4px 12px rgba(0,0,0,0.4),inset 0 1px 0 rgba(212,168,67,0.1);}
+.bbtn:disabled{opacity:0.28;cursor:not-allowed;}
+.bbtn .bi{font-size:24px;flex-shrink:0;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5));}
+.bbtn .bd .bn{font-family:'Cinzel',serif;font-size:12px;color:var(--gold2);font-weight:700;}
+.bbtn .bd .bds{font-size:11px;color:var(--text2);margin-top:1px;line-height:1.4;}
+.bbtn .bd .bc{font-size:10px;color:var(--text3);margin-top:3px;}
+
+/* action btns */
+.abtn{
+  border-radius:7px;padding:8px 12px;cursor:pointer;width:100%;
+  font-family:'Cinzel',serif;font-size:11px;letter-spacing:0.5px;
+  transition:all 0.2s;border:1px solid;
+}
+.abtn.upg{background:rgba(107,63,160,0.1);border-color:rgba(107,63,160,0.4);color:#c084fc;}
+.abtn.upg:hover:not(:disabled){background:rgba(107,63,160,0.2);box-shadow:0 0 12px rgba(107,63,160,0.2);}
+.abtn.dem{background:rgba(139,32,32,0.08);border-color:rgba(139,32,32,0.3);color:#e07070;}
+.abtn.dem:hover{background:rgba(139,32,32,0.18);}
+.abtn:disabled{opacity:0.3;cursor:not-allowed;}
+
+/* stat rows */
+.srow{display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.04);}
+.srow:last-child{border:none;}
+.srow span:first-child{color:var(--text2);}
+.srow span:last-child{color:var(--gold2);font-family:'Cinzel',serif;font-size:11px;font-weight:700;}
+
+/* building display */
+.b-portrait{text-align:center;padding:8px 0 4px;}
+.b-portrait .b-ico{font-size:48px;filter:drop-shadow(0 4px 12px rgba(0,0,0,0.7)) drop-shadow(0 0 8px rgba(212,168,67,0.2));}
+.b-portrait .b-name{font-family:'Cinzel',serif;font-size:18px;color:var(--gold2);font-weight:700;margin-top:4px;letter-spacing:1px;}
+.b-portrait .b-lv{display:inline-flex;align-items:center;gap:4px;margin-top:4px;}
+.lv-dot{width:8px;height:8px;border-radius:50%;background:var(--gold-dim);border:1px solid var(--gold-dim);}
+.lv-dot.on{background:var(--gold);border-color:var(--gold);box-shadow:0 0 4px var(--gold);}
+.b-desc{font-size:12px;color:var(--text2);font-style:italic;text-align:center;line-height:1.5;padding:4px 4px 8px;}
+
+/* hp bar in sidebar */
+.hp-sb{height:8px;background:rgba(255,255,255,0.06);border-radius:4px;overflow:hidden;margin:2px 0 4px;}
+.hp-sb-f{height:100%;border-radius:4px;transition:width 0.4s,background 0.4s;}
+.hp-txt{display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-bottom:6px;}
+
+.hint{font-size:13px;color:var(--text3);font-style:italic;line-height:1.8;text-align:center;padding:20px 8px;}
+
+/* ─── QUESTS ─── */
+#quests{border-top:1px solid var(--border);flex-shrink:0;max-height:170px;overflow-y:auto;
+  background:rgba(0,0,0,0.2);}
+#quests::-webkit-scrollbar{width:3px;}
+#quests::-webkit-scrollbar-thumb{background:var(--gold-dim);border-radius:2px;}
+#q-title{font-family:'Cinzel',serif;font-size:9px;color:var(--text3);letter-spacing:2px;padding:8px 12px 4px;
+  border-bottom:1px solid var(--border);}
+.qi{display:flex;align-items:flex-start;gap:8px;padding:6px 12px;border-bottom:1px solid rgba(255,255,255,0.03);}
+.qi:last-child{border:none;}
+.qi-ico{font-size:14px;flex-shrink:0;margin-top:1px;}
+.qi-name{font-family:'Cinzel',serif;font-size:11px;color:var(--gold2);}
+.qi-desc{font-size:11px;color:var(--text2);line-height:1.4;}
+.qi.done .qi-name{color:#5dba78;}
+.qbar{height:3px;background:rgba(255,255,255,0.06);border-radius:2px;margin-top:3px;}
+.qbar-f{height:100%;background:linear-gradient(90deg,var(--gold-dim),var(--gold));border-radius:2px;transition:width 0.4s;}
+
+/* ─── BOTTOM ─── */
+#bot{height:30px;border-top:1px solid var(--border);background:rgba(4,3,8,0.97);
+  display:flex;align-items:center;padding:0 14px;gap:8px;flex-shrink:0;}
+#msg{font-size:12px;color:var(--text2);font-style:italic;flex:1;transition:color 0.3s;}
+#msg.g{color:#5dba78;}#msg.b{color:#e05050;}#msg.w{color:var(--gold2);}
+
+/* ─── OVERLAY ─── */
+#ov{position:fixed;inset:0;z-index:200;display:none;align-items:center;justify-content:center;
+  background:rgba(0,0,0,0.82);backdrop-filter:blur(6px);}
+#ov.on{display:flex;}
+#ov-box{
+  background:linear-gradient(160deg,#0c0914 0%,#130f1e 100%);
+  border:1px solid var(--border2);border-radius:14px;
+  padding:36px 40px;max-width:440px;width:90%;text-align:center;
+  box-shadow:0 0 80px rgba(0,0,0,0.9),0 0 40px rgba(107,63,160,0.15),inset 0 1px 0 rgba(212,168,67,0.1);
+  animation:ovIn 0.35s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes ovIn{from{transform:scale(0.8) translateY(30px);opacity:0}to{transform:none;opacity:1}}
+#ov-ico{font-size:56px;margin-bottom:14px;display:block;animation:ovIco 2s ease-in-out infinite alternate;}
+@keyframes ovIco{from{filter:brightness(1) drop-shadow(0 0 0px transparent)}to{filter:brightness(1.4) drop-shadow(0 0 15px currentColor)}}
+#ov-title{font-family:'Cinzel Decorative',serif;font-size:22px;color:var(--gold2);margin-bottom:10px;
+  text-shadow:0 0 20px rgba(212,168,67,0.3);}
+#ov-desc{font-size:15px;color:var(--text2);line-height:1.8;margin-bottom:24px;}
+#ov-choices{display:flex;flex-direction:column;gap:8px;}
+.oc{
+  background:rgba(212,168,67,0.05);border:1px solid var(--border);border-radius:8px;
+  padding:11px 16px;cursor:pointer;color:var(--text);font-size:14px;
+  transition:all 0.2s;font-family:'IM Fell English',serif;text-align:left;
+}
+.oc:hover{background:rgba(212,168,67,0.12);border-color:var(--border2);transform:translateX(5px);}
+.oc.r{border-color:rgba(139,32,32,0.4);}.oc.r:hover{background:rgba(139,32,32,0.12);}
+.oc.g{border-color:rgba(39,130,90,0.4);}.oc.g:hover{background:rgba(39,130,90,0.1);}
+
+/* ─── WAVE BANNER ─── */
+#wave{
+  position:fixed;top:56px;left:50%;transform:translateX(-50%);
+  background:linear-gradient(135deg,rgba(30,8,8,0.97),rgba(60,15,15,0.97));
+  border:1px solid rgba(192,57,43,0.6);border-radius:8px;
+  padding:9px 28px;font-family:'Cinzel',serif;font-size:13px;color:#f5a0a0;
+  letter-spacing:2px;z-index:100;display:none;
+  box-shadow:0 0 30px rgba(192,57,43,0.4),inset 0 1px 0 rgba(255,255,255,0.05);
+  animation:wvIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes wvIn{from{transform:translateX(-50%) translateY(-20px) scale(0.9);opacity:0}to{transform:translateX(-50%) translateY(0) scale(1);opacity:1}}
+
+/* ─── FLOAT TEXTS ─── */
+.ft{position:fixed;pointer-events:none;z-index:400;font-family:'Cinzel',serif;font-size:13px;
+  font-weight:700;text-shadow:0 2px 6px rgba(0,0,0,0.95);
+  animation:ftUp 1.4s ease-out forwards;}
+@keyframes ftUp{0%{opacity:1;transform:translateY(0) scale(1)}60%{opacity:1}100%{opacity:0;transform:translateY(-65px) scale(0.7)}}
 </style>
 </head>
 <body>
+<canvas id="bg"></canvas>
+<div id="wave">⚔&ensp;VAGUE D'ATTAQUE&ensp;⚔</div>
 <div id="app">
-  <div id="header">
-    <h1>⚜ HEARTHLAND</h1>
-    <div id="resources"></div>
-    <div id="turn-info">Tour <span id="turn-num">1</span></div>
-  </div>
-  <div id="tickbar"><div id="tickfill"></div></div>
-  <div id="main">
-    <div id="map-wrap"><div id="map"></div></div>
-    <div id="sidebar">
-      <div id="sidebar-header">
-        <div id="sidebar-title">Sélectionne une case</div>
-        <div id="sidebar-sub">Clique sur la carte pour construire</div>
-      </div>
-      <div id="sidebar-body"><p class="empty-hint">← Clique sur n'importe<br>quelle case de la carte<br>pour commencer.</p></div>
+  <div id="hdr">
+    <div id="logo"><span id="logo-crown">♛</span><span id="logo-text">HEARTHLAND</span></div>
+    <div id="res-bar"></div>
+    <div id="hdr-right">
+      <button class="hbtn" id="pbtn" onclick="togglePause()">⏸ Pause</button>
+      <button class="hbtn red" onclick="askReset()">↺ Reset</button>
+      <div id="turn-box"><div id="turn-lbl">TOUR</div><div id="turn-n">1</div></div>
     </div>
   </div>
-  <div id="bottombar">
-    <div id="msg">Bienvenue dans Hearthland — Construis ton empire !</div>
-    <button id="pause-btn">⏸ Pause</button>
+  <div id="tick"><div id="tf"></div></div>
+  <div id="main">
+    <div id="map-area"><div id="map-scroll"><div id="map"></div></div></div>
+    <div id="sb">
+      <div id="xp-strip">
+        <div class="xp-row"><span class="xp-lv" id="xp-lv">NIVEAU 1</span><span class="xp-pts" id="xp-pts">0 / 100 XP</span></div>
+        <div class="xp-track"><div class="xp-fill" id="xp-fill" style="width:0%"></div></div>
+      </div>
+      <div id="sb-hd"><div id="sb-title">Sélectionne une case</div><div id="sb-sub">Clique sur la carte</div></div>
+      <div id="sb-body"><p class="hint">Clique sur n'importe quelle case de la carte pour commencer à construire.</p></div>
+      <div id="quests"><div id="q-title">⚔ QUÊTES ACTIVES</div><div id="q-list"></div></div>
+    </div>
   </div>
+  <div id="bot"><div id="msg">Bienvenue dans Hearthland — Forge ton empire !</div></div>
 </div>
+<div id="ov"><div id="ov-box">
+  <span id="ov-ico">⚡</span>
+  <div id="ov-title">Titre</div>
+  <div id="ov-desc">Description.</div>
+  <div id="ov-choices"></div>
+</div></div>
 
 <script>
-const COLS=10, ROWS=7;
-const RES_DEF={gold:100,food:30,wood:20,pop:2,defense:0};
-const CAP_DEF=80;
+/* ═══ BACKGROUND CANVAS ═══ */
+(()=>{
+  const c=document.getElementById('bg'),ctx=c.getContext('2d');
+  let W,H,pts=[];
+  const resize=()=>{W=c.width=innerWidth;H=c.height=innerHeight;};
+  resize();addEventListener('resize',resize);
+  for(let i=0;i<140;i++)pts.push({x:Math.random(),y:Math.random(),r:Math.random()*1.4+0.2,
+    ph:Math.random()*Math.PI*2,spd:0.003+Math.random()*0.009,
+    mx:Math.random()*0.0001-0.00005,my:Math.random()*0.0001-0.00005});
+  let t=0;
+  const AURORAS=[
+    {cx:0.25,cy:0.15,rx:0.5,ry:0.3,col:'rgba(60,25,8,',spx:0.0002,spy:0.00015},
+    {cx:0.75,cy:0.80,rx:0.45,ry:0.28,col:'rgba(15,8,35,',spx:-0.00015,spy:0.0002},
+    {cx:0.55,cy:0.45,rx:0.35,ry:0.25,col:'rgba(8,20,40,',spx:0.00018,spy:-0.00012},
+  ];
+  const draw=()=>{
+    ctx.clearRect(0,0,W,H);
+    AURORAS.forEach(a=>{
+      const cx=(a.cx+Math.sin(t*a.spx)*0.15)*W;
+      const cy=(a.cy+Math.cos(t*a.spy)*0.1)*H;
+      const g=ctx.createRadialGradient(cx,cy,0,cx,cy,Math.max(W,H)*0.45);
+      g.addColorStop(0,a.col+'0.18)');g.addColorStop(0.5,a.col+'0.06)');g.addColorStop(1,a.col+'0)');
+      ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+    });
+    pts.forEach(p=>{
+      p.ph+=p.spd;p.x+=p.mx;p.y+=p.my;
+      if(p.x<0)p.x=1;if(p.x>1)p.x=0;if(p.y<0)p.y=1;if(p.y>1)p.y=0;
+      const a=0.08+0.45*Math.abs(Math.sin(p.ph));
+      ctx.beginPath();ctx.arc(p.x*W,p.y*H,p.r,0,Math.PI*2);
+      ctx.fillStyle=`rgba(255,238,170,${a})`;ctx.fill();
+    });
+    t++;requestAnimationFrame(draw);
+  };draw();
+})();
 
-const TERRAIN_INFO={
-  grass:  {icon:'🌿',label:'Prairie',   color:'t-grass'},
-  forest: {icon:'🌲',label:'Forêt',     color:'t-forest'},
-  water:  {icon:'💧',label:'Rivière',   color:'t-water'},
-  mountain:{icon:'⛰️',label:'Montagne', color:'t-mountain'},
-  desert: {icon:'🏜️',label:'Désert',   color:'t-desert'},
+/* ═══ DATA ═══ */
+const COLS=10,ROWS=7;
+const TR={
+  grass:  {ico:'🌿',lbl:'Prairie',  cls:'tg'},
+  forest: {ico:'🌲',lbl:'Forêt',    cls:'tf'},
+  water:  {ico:'💧',lbl:'Rivière',  cls:'tw'},
+  mountain:{ico:'⛰️',lbl:'Montagne',cls:'tm'},
+  desert: {ico:'🏜️',lbl:'Désert',  cls:'td'},
 };
-const BUILDINGS={
-  farm:      {icon:'🌾',name:'Ferme',       cost:{gold:30},           prod:{food:4},        needs:{},        desc:'Produit de la nourriture chaque tour.',        terrain:['grass','water']},
-  sawmill:   {icon:'🪵',name:'Scierie',     cost:{gold:40,food:5},    prod:{wood:3},        needs:{food:1},  desc:'Récolte le bois des forêts proches.',          terrain:['forest','grass']},
-  mine:      {icon:'⛏️',name:'Mine',        cost:{gold:50,food:5},    prod:{gold:5},        needs:{food:2},  desc:'Extrait l\'or de la roche.',                   terrain:['mountain','desert']},
-  house:     {icon:'🏠',name:'Maison',      cost:{gold:25,wood:8},    prod:{pop:1},         needs:{food:2},  desc:'Attire des habitants. Consomme de la nourriture.',terrain:['grass','forest','desert']},
-  market:    {icon:'🏪',name:'Marché',      cost:{gold:70,wood:15},   prod:{gold:7},        needs:{pop:2},   desc:'Commerce florissant. Nécessite de la population.',terrain:['grass','desert','water']},
-  barracks:  {icon:'⚔️',name:'Caserne',     cost:{gold:90,wood:20},   prod:{defense:3},     needs:{food:3,pop:1},desc:'Entraîne des soldats pour défendre le royaume.',terrain:['mountain','grass']},
-  warehouse: {icon:'🏗️',name:'Entrepôt',   cost:{gold:60,wood:25},   prod:{capacity:30},   needs:{},        desc:'Augmente la capacité de stockage de +30.',     terrain:['grass','forest','desert','mountain']},
-  temple:    {icon:'⛩️',name:'Temple',      cost:{gold:120,wood:30},  prod:{pop:1,gold:3},  needs:{pop:3},   desc:'Centre spirituel. Attire et enrichit le peuple.',terrain:['mountain','grass','desert']},
+const B={
+  farm:     {ico:'🌾',nm:'Ferme',       t:['grass','water'],   d:{cost:{gold:30},      prod:{food:4},    needs:{},      hp:60, xp:10},desc:'Produit de la nourriture.'},
+  sawmill:  {ico:'🪵',nm:'Scierie',     t:['forest','grass'],  d:{cost:{gold:40,food:5},prod:{wood:3},   needs:{food:1},hp:50, xp:12},desc:'Produit du bois.'},
+  mine:     {ico:'⛏️',nm:'Mine',        t:['mountain','desert'],d:{cost:{gold:50,food:5},prod:{gold:5}, needs:{},      hp:80, xp:15},desc:'Génère de l\'or.'},
+  house:    {ico:'🏠',nm:'Maison',      t:['grass','forest','desert'],d:{cost:{gold:25,wood:8},prod:{pop:1},needs:{food:1},hp:40,xp:8},desc:'Augmente la population.'},
+  market:   {ico:'🏪',nm:'Marché',      t:['grass','desert','water'],d:{cost:{gold:70,wood:15},prod:{gold:7},needs:{pop:1},hp:60,xp:20},desc:'Génère beaucoup d\'or.'},
+  barracks: {ico:'⚔️',nm:'Caserne',    t:['mountain','grass'],d:{cost:{gold:90,wood:20},prod:{defense:4},needs:{food:1},hp:100,xp:25},desc:'Défense +4.'},
+  warehouse:{ico:'🏗️',nm:'Entrepôt',  t:['grass','forest','desert','mountain'],d:{cost:{gold:60,wood:25},prod:{capacity:30},needs:{},hp:70,xp:15},desc:'Capacité +30.'},
+  temple:   {ico:'⛩️',nm:'Temple',     t:['mountain','grass','desert'],d:{cost:{gold:120,wood:30},prod:{pop:1,gold:3},needs:{pop:3},hp:90,xp:30},desc:'Centre spirituel.'},
+  tower:    {ico:'🗼',nm:'Tour de guet',t:['mountain','grass'],d:{cost:{gold:80,wood:20},prod:{defense:6,gold:1},needs:{pop:1},hp:120,xp:22},desc:'Forte défense.'},
 };
-const RES_ICONS={gold:'🪙',food:'🌽',wood:'🪵',pop:'👤',defense:'🛡️'};
-const RES_LABELS={gold:'Or',food:'Nourriture',wood:'Bois',pop:'Population',defense:'Défense'};
+const ICONS={gold:'🪙',food:'🌽',wood:'🪵',pop:'👤',defense:'🛡️'};
+const RNAME={gold:'Or',food:'Nourriture',wood:'Bois',pop:'Population',defense:'Défense'};
+const RLVL=[0,100,220,380,580,820,1100,1440,1840,2300,2840];
+const EVENTS=[
+  {ico:'☀️',ttl:'Grande Sécheresse',dsc:'Un été brûlant ravage tes champs. Les fermes produiront moins.',type:'bad',ch:[
+    {t:'🌧️ Invoquer la pluie (−40 or)',cost:{gold:40},fn:()=>{},r:'La pluie est venue. Cultures sauvées !'},
+    {t:'📦 Puiser les réserves (−20 nourriture)',fn:()=>{G.res.food=Math.max(0,G.res.food-20);},r:'Tu puises dans tes réserves.'},
+    {t:'😤 Endurer (−30% prod. alimentaire × 5 tours)',fn:()=>{G.deb.push({type:'drought',turns:5});},r:'Tes paysans souffrent.'},
+  ]},
+  {ico:'💀',ttl:'Épidémie',dsc:'Une maladie mystérieuse se répand. La population diminue.',type:'bad',ch:[
+    {t:'🏥 Hospice (−60 or)',cost:{gold:60},fn:()=>{},r:'L\'hospice enraye l\'épidémie.'},
+    {t:'🔒 Quarantaine (−1 population)',fn:()=>{G.res.pop=Math.max(1,G.res.pop-1);},r:'La quarantaine limite les dégâts.'},
+  ]},
+  {ico:'🚢',ttl:'Caravane Marchande',dsc:'Un riche marchand propose un échange avantageux.',type:'good',ch:[
+    {t:'🪵 30 bois → 50 or',fn:()=>{if(G.res.wood>=30){G.res.wood-=30;G.res.gold=Math.min(G.cap,G.res.gold+50);}},r:'Excellent échange !'},
+    {t:'🌽 20 nourriture → 40 or',fn:()=>{if(G.res.food>=20){G.res.food-=20;G.res.gold=Math.min(G.cap,G.res.gold+40);}},r:'Marché conclu !'},
+    {t:'🤝 Refuser',fn:()=>{},r:'Tu laisses passer l\'opportunité.'},
+  ]},
+  {ico:'✨',ttl:'Découverte Ancienne',dsc:'Tes ouvriers ont trouvé des ruines remplies de trésors !',type:'good',ch:[
+    {t:'🏺 Explorer (+80 or, risque effondrement)',fn:()=>{G.res.gold=Math.min(G.cap,G.res.gold+80);if(Math.random()<0.3){const k=Object.keys(G.bld)[0];if(k)delete G.bld[k];}},r:'Trésors récupérés !'},
+    {t:'📜 Étudier (+60 XP)',fn:()=>gainXP(60),r:'La connaissance ancienne enrichit ton peuple !'},
+  ]},
+  {ico:'🎉',ttl:'Festival des Récoltes',dsc:'Une saison abondante ! Production doublée ce tour.',type:'good',ch:[
+    {t:'🥂 Célébrer !',fn:()=>{G.buf.push({type:'double',turns:1});},r:'Le royaume est en fête !'},
+  ]},
+  {ico:'⛈️',ttl:'Tempête Dévastatrice',dsc:'Une violente tempête s\'abat. Un bâtiment est endommagé.',type:'bad',ch:[
+    {t:'🔨 Réparer (−30 or)',cost:{gold:30},fn:()=>{},r:'Réparations faites rapidement.'},
+    {t:'😮 Laisser les dégâts',fn:()=>{const ks=Object.keys(G.bld);if(ks.length){const k=ks[Math.floor(Math.random()*ks.length)];G.hp[k]=Math.max(0,(G.hp[k]||100)-40);}},r:'Un bâtiment est sévèrement endommagé.'},
+  ]},
+];
+const QUESTS=[
+  {id:'q1',nm:'Premiers Pas',dsc:'Construis ta 1ère ferme',ico:'🌱',chk:()=>Object.values(G.bld).includes('farm'),rew:{gold:50,xp:20}},
+  {id:'q2',nm:'Charpentier',dsc:'Construis 2 scieries',ico:'🪵',chk:()=>Object.values(G.bld).filter(b=>b==='sawmill').length>=2,rew:{wood:30,xp:25}},
+  {id:'q3',nm:'Or & Fortune',dsc:'Accumule 200 or',ico:'🪙',chk:()=>G.res.gold>=200,rew:{gold:80,xp:30}},
+  {id:'q4',nm:'Peuple Nombreux',dsc:'Atteins 5 de population',ico:'👥',chk:()=>G.res.pop>=5,rew:{gold:60,xp:35}},
+  {id:'q5',nm:'Forteresse',dsc:'Construis une caserne',ico:'⚔️',chk:()=>Object.values(G.bld).includes('barracks'),rew:{gold:100,xp:40}},
+  {id:'q6',nm:'Empire',dsc:'Construis 10 bâtiments',ico:'🏰',chk:()=>Object.keys(G.bld).length>=10,rew:{gold:200,xp:80}},
+  {id:'q7',nm:'Résister',dsc:'Repousse une vague ennemie',ico:'🛡️',chk:()=>G.wavesOk>=1,rew:{gold:150,xp:60}},
+  {id:'q8',nm:'Centenaire',dsc:'Atteins le tour 100',ico:'🏅',chk:()=>G.turn>=100,rew:{gold:300,xp:100}},
+];
 
-function rnd(a,b){return a+Math.floor(Math.random()*(b-a+1));}
-function makeTerrain(){
+/* ═══ STATE ═══ */
+function mkTerrain(){
   const t=[];
-  for(let i=0;i<COLS*ROWS;i++){
-    const r=Math.random();
-    if(r<0.32)t.push('grass');
-    else if(r<0.52)t.push('forest');
-    else if(r<0.65)t.push('water');
-    else if(r<0.80)t.push('mountain');
-    else t.push('desert');
-  }
+  for(let i=0;i<COLS*ROWS;i++){const r=Math.random();
+    t.push(r<0.32?'grass':r<0.52?'forest':r<0.65?'water':r<0.80?'mountain':'desert');}
   return t;
 }
+const mkG=()=>({
+  res:{gold:100,food:30,wood:20,pop:2,defense:0},
+  cap:500,terrain:mkTerrain(),bld:{},hp:{},lv:{},
+  sel:null,turn:1,paused:false,tp:0,TM:100,
+  xp:0,level:1,deb:[],buf:[],
+  enemies:[],nextWave:20,wavesOk:0,evCd:0,
+  quests:QUESTS.map(q=>({...q,done:false})),
+});
+let G=mkG();
 
-let S={
-  res:Object.assign({},RES_DEF),
-  capacity:CAP_DEF,
-  terrain:makeTerrain(),
-  buildings:{},
-  selected:null,
-  turn:1,
-  paused:false,
-  tickProgress:0,
-  TICK_MAX:80,
-};
-
-function canAfford(cost){return Object.entries(cost).every(([k,v])=>S.res[k]>=v);}
-
-function build(idx,bk){
-  const b=BUILDINGS[bk];
-  if(!canAfford(b.cost)){setMsg('Pas assez de ressources !','bad');return;}
-  Object.entries(b.cost).forEach(([k,v])=>S.res[k]-=v);
-  S.buildings[idx]=bk;
-  setMsg(b.name+' construite !','good');
-  pulseCell(idx);
-  render();
+/* ═══ XP / LEVEL ═══ */
+function lvData(){
+  const lv=G.level,prev=RLVL[lv-1]||0,next=RLVL[lv]||9999;
+  const cur=G.xp-prev,need=next-prev;
+  return{lv,cur,need,pct:Math.min(100,Math.round(cur/need*100))};
 }
-function demolish(idx){
-  const bk=S.buildings[idx];if(!bk)return;
-  const b=BUILDINGS[bk];
-  const refund=Math.floor((b.cost.gold||0)*0.4);
-  S.res.gold+=refund;
-  delete S.buildings[idx];
-  setMsg('Bâtiment démoli. +'+refund+' or récupéré.','bad');
-  render();
+function gainXP(n){
+  G.xp+=n;
+  const thresh=RLVL[G.level];
+  if(thresh&&G.xp>=thresh){
+    G.level++;
+    showOv({ico:'⭐',ttl:'NIVEAU '+G.level+' !',
+      dsc:'Ton empire monte en puissance ! Un bonus de ressources t\'attend.',
+      chs:[{t:'🎁 Réclamer (+50 🪙 +20 🌽 +15 🪵)',cls:'g',cb(){
+        G.res.gold=Math.min(G.cap,G.res.gold+50);
+        G.res.food=Math.min(G.cap,G.res.food+20);
+        G.res.wood=Math.min(G.cap,G.res.wood+15);
+        setMsg('Niveau '+G.level+' ! Bonus réclamé !','g');closeOv();
+      }}]});
+  }
 }
 
+/* ═══ BUILD / DEMO / UPGRADE ═══ */
+const afford=cost=>Object.entries(cost).every(([k,v])=>(G.res[k]||0)>=v);
+function doBuild(idx,bk){
+  const b=B[bk];
+  if(!afford(b.d.cost)){setMsg('Ressources insuffisantes !','b');return;}
+  Object.entries(b.d.cost).forEach(([k,v])=>G.res[k]-=v);
+  G.bld[idx]=bk;G.hp[idx]=b.d.hp;G.lv[idx]=1;
+  gainXP(b.d.xp);setMsg(b.nm+' construite !','g');
+  pulse(idx,'anim-build');checkQ();render();
+}
+function doDemo(idx){
+  const bk=G.bld[idx];if(!bk)return;
+  const ref=Math.floor((B[bk].d.cost.gold||0)*0.4);
+  G.res.gold+=ref;
+  delete G.bld[idx];delete G.hp[idx];delete G.lv[idx];
+  setMsg('Démoli. +'+ref+' 🪙 récupéré.','w');render();
+}
+function doUpg(idx){
+  const bk=G.bld[idx];if(!bk)return;
+  const lv=G.lv[idx]||1;if(lv>=3){setMsg('Niveau maximum !','w');return;}
+  const b=B[bk];
+  const uc={gold:Math.round(b.d.cost.gold*1.5*lv),wood:Math.round((b.d.cost.wood||0)*1.5*lv)};
+  if(!afford(uc)){setMsg('Pas assez de ressources pour améliorer !','b');return;}
+  Object.entries(uc).forEach(([k,v])=>{if(G.res[k]!=null)G.res[k]-=v;});
+  G.lv[idx]=lv+1;G.hp[idx]=Math.round(b.d.hp*(1+lv*0.5));
+  gainXP(Math.round(b.d.xp*1.5));
+  setMsg(b.nm+' améliorée — Niveau '+(lv+1)+' !','g');
+  pulse(idx,'anim-build');render();
+}
+
+/* ═══ TICK ═══ */
+let tickT=null;
+function startTick(){
+  if(tickT)clearInterval(tickT);
+  tickT=setInterval(()=>{
+    if(G.paused)return;
+    G.tp++;document.getElementById('tf').style.width=(G.tp/G.TM*100)+'%';
+    if(G.tp>=G.TM){G.tp=0;doTick();}
+  },40);
+}
 function doTick(){
-  S.turn++;
-  let pd={gold:0,food:0,wood:0,pop:0,defense:0};
-  let cn={food:0};
-  S.capacity=CAP_DEF;
-  Object.entries(S.buildings).forEach(([idx,bk])=>{
-    const b=BUILDINGS[bk];
+  G.turn++;document.getElementById('turn-n').textContent=G.turn;
+  G.deb=G.deb.filter(d=>{d.turns--;return d.turns>0;});
+  G.buf=G.buf.filter(b=>{b.turns--;return b.turns>0;});
+  const dbl=G.buf.some(b=>b.type==='double');
+  const dry=G.deb.some(d=>d.type==='drought');
+  let pd={gold:0,food:0,wood:0,pop:0,defense:0};let cn={food:0};
+  G.cap=500;
+  Object.entries(G.bld).forEach(([idx,bk])=>{
+    const b=B[bk];const lv=G.lv[idx]||1;const m=dbl?2:1;
     let ok=true;
-    Object.entries(b.needs||{}).forEach(([k,v])=>{if(S.res[k]<v)ok=false;});
+    Object.entries(b.d.needs||{}).forEach(([k,v])=>{if((G.res[k]||0)<v)ok=false;});
     if(ok){
-      if(b.prod.food)pd.food+=b.prod.food;
-      if(b.prod.gold)pd.gold+=b.prod.gold;
-      if(b.prod.wood)pd.wood+=b.prod.wood;
-      if(b.prod.pop)pd.pop+=b.prod.pop;
-      if(b.prod.defense)pd.defense+=b.prod.defense;
-      if(b.prod.capacity)S.capacity+=b.prod.capacity;
-      if(b.needs.food)cn.food+=b.needs.food;
+      const p=b.d.prod;
+      if(p.food) pd.food+=Math.round(p.food*lv*(dry?0.4:1)*m);
+      if(p.gold) pd.gold+=Math.round(p.gold*lv*m);
+      if(p.wood) pd.wood+=Math.round(p.wood*lv*m);
+      if(p.pop)  pd.pop+=p.pop;
+      if(p.defense) pd.defense+=p.defense*lv;
+      if(p.capacity) G.cap+=p.capacity*lv;
+      Object.entries(b.d.needs||{}).forEach(([k,v])=>{if(k==='food')cn.food+=v;});
     }
   });
-  const cap=S.capacity;
-  S.res.gold=Math.min(cap,S.res.gold+pd.gold);
-  S.res.food=Math.min(cap,Math.max(0,S.res.food+pd.food-cn.food));
-  S.res.wood=Math.min(cap,S.res.wood+pd.wood);
-  if(pd.pop>0)S.res.pop=Math.min(20,S.res.pop+pd.pop);
-  S.res.defense=pd.defense;
-  const parts=[];
-  if(pd.gold)parts.push('+'+pd.gold+'🪙');
-  if(pd.food-cn.food>0)parts.push('+'+(pd.food-cn.food)+'🌽');
-  if(pd.wood)parts.push('+'+pd.wood+'🪵');
-  if(parts.length)setMsg('Tour '+S.turn+' — '+parts.join(' '),'good');
-  else setMsg('Tour '+S.turn+' — Aucune production.');
-  if(parts.length)spawnPopup(parts.join('  '));
-  render();
+  G.res.gold=Math.min(G.cap,G.res.gold+pd.gold);
+  G.res.food=Math.min(G.cap,Math.max(0,G.res.food+pd.food-cn.food));
+  G.res.wood=Math.min(G.cap,G.res.wood+pd.wood);
+  if(pd.pop)G.res.pop=Math.min(20,G.res.pop+pd.pop);
+  G.res.defense=pd.defense;
+
+  if(G.turn>=G.nextWave)spawnWave();
+  tickEnemies(pd.defense);
+  if(G.turn%15===0&&G.evCd<=0&&!G.enemies.length){G.evCd=10;triggerEvent();}
+  if(G.evCd>0)G.evCd--;
+
+  if(pd.gold||pd.food||pd.wood){
+    const parts=[];
+    if(pd.gold)parts.push('+'+pd.gold+'🪙');
+    if(pd.food-cn.food>0)parts.push('+'+(pd.food-cn.food)+'🌽');
+    if(pd.wood)parts.push('+'+pd.wood+'🪵');
+    if(parts.length)floatCenter(parts.join(' '),'#f0c866');
+  }
+  checkQ();render();
 }
 
-let tickTimer=null;
-function startTick(){
-  if(tickTimer)clearInterval(tickTimer);
-  tickTimer=setInterval(()=>{
-    if(S.paused)return;
-    S.tickProgress++;
-    document.getElementById('tickfill').style.width=(S.tickProgress/S.TICK_MAX*100)+'%';
-    if(S.tickProgress>=S.TICK_MAX){S.tickProgress=0;doTick();}
-  },50);
+/* ═══ ENEMIES ═══ */
+function spawnWave(){
+  const sz=1+Math.floor(G.turn/30);
+  G.nextWave=G.turn+20+Math.floor(Math.random()*10);
+  const types=['👹','👺','💀','🧟'];
+  for(let i=0;i<sz;i++){
+    const idx=Math.floor(Math.random()*COLS*ROWS);
+    G.enemies.push({idx,hp:15+G.level*4,maxHp:15+G.level*4,
+      ico:types[Math.floor(Math.random()*types.length)],atk:3+G.level});
+  }
+  const wb=document.getElementById('wave');
+  wb.style.display='block';setTimeout(()=>wb.style.display='none',3000);
+  setMsg('⚔️ VAGUE ENNEMIE ! '+sz+' ennemi(s) attaquent !','b');
 }
-
-function pulseCell(idx){
-  const el=document.querySelector('[data-i="'+idx+'"]');
-  if(!el)return;
-  el.classList.remove('pulse');
-  void el.offsetWidth;
-  el.classList.add('pulse');
-}
-
-function spawnPopup(text){
-  const el=document.createElement('div');
-  el.className='popup';
-  el.textContent=text;
-  const mw=document.getElementById('map-wrap');
-  const r=mw.getBoundingClientRect();
-  el.style.left=(r.left+r.width/2-60)+'px';
-  el.style.top=(r.top+80)+'px';
-  document.body.appendChild(el);
-  setTimeout(()=>el.remove(),1200);
-}
-
-let msgTimer=null;
-function setMsg(t,cls=''){
-  const el=document.getElementById('msg');
-  el.textContent=t;
-  el.className=cls;
-  if(msgTimer)clearTimeout(msgTimer);
-  msgTimer=setTimeout(()=>{el.className='';},3000);
-}
-
-function fmtCost(cost){
-  return Object.entries(cost).map(([k,v])=>v+' '+RES_ICONS[k]).join(' · ');
-}
-function fmtProd(prod){
-  return Object.entries(prod).map(([k,v])=>'+'+v+' '+(RES_ICONS[k]||k)).join(' · ');
-}
-function fmtNeeds(needs){
-  if(!Object.keys(needs).length)return 'Aucune';
-  return Object.entries(needs).map(([k,v])=>v+' '+RES_ICONS[k]).join(' · ');
-}
-
-function renderTopbar(){
-  const keys=['gold','food','wood','pop','defense'];
-  let html='';
-  keys.forEach(k=>{
-    html+=`<div class="res-item">
-      <div class="res-icon">${RES_ICONS[k]}</div>
-      <div class="res-info">
-        <div class="res-label">${RES_LABELS[k]}</div>
-        <div class="res-val">${Math.round(S.res[k])}</div>
-      </div>
-    </div>`;
+function tickEnemies(def){
+  if(!G.enemies.length)return;
+  G.enemies.forEach(en=>{
+    const ks=Object.keys(G.bld);
+    if(ks.length){
+      const tgt=ks[Math.floor(Math.random()*ks.length)];
+      const dmg=Math.max(0,en.atk-Math.floor(def*0.8));
+      if(dmg>0){
+        G.hp[tgt]=(G.hp[tgt]||100)-dmg;
+        pulse(parseInt(tgt),'anim-hit');
+        floatOnCell('-'+dmg+'❤️',parseInt(tgt),'#e05050');
+        if(G.hp[tgt]<=0){
+          setMsg('💥 '+B[G.bld[tgt]].nm+' détruite !','b');
+          delete G.bld[tgt];delete G.hp[tgt];delete G.lv[tgt];
+        }
+      } else floatOnCell('🛡️',parseInt(tgt),'#5dba78');
+    }
+    en.hp-=Math.max(3,def*1.5);
   });
-  html+=`<div class="res-item"><div class="res-icon">📦</div><div class="res-info"><div class="res-label">Capacité</div><div class="res-val">${S.capacity}</div></div></div>`;
-  document.getElementById('resources').innerHTML=html;
-  document.getElementById('turn-num').textContent=S.turn;
+  G.enemies=G.enemies.filter(e=>e.hp>0);
+  if(!G.enemies.length){
+    G.wavesOk++;
+    G.res.gold=Math.min(G.cap,G.res.gold+30);
+    gainXP(40);setMsg('✅ Vague repoussée ! +30 🪙 de butin.','g');checkQ();
+  }
 }
 
+/* ═══ EVENTS ═══ */
+function triggerEvent(){
+  const ev=EVENTS[Math.floor(Math.random()*EVENTS.length)];
+  showOv({ico:ev.ico,ttl:ev.ttl,dsc:ev.dsc,
+    chs:ev.ch.map(c=>({
+      t:c.t,cls:ev.type==='good'?'g':'r',
+      cb(){
+        if(c.cost&&!afford(c.cost)){setMsg('Ressources insuffisantes !','b');return;}
+        if(c.cost)Object.entries(c.cost).forEach(([k,v])=>G.res[k]-=v);
+        c.fn();setMsg(c.r,ev.type==='good'?'g':'w');closeOv();render();
+      }
+    }))
+  });
+}
+
+/* ═══ OVERLAY ═══ */
+function showOv({ico,ttl,dsc,chs}){
+  G.paused=true;
+  document.getElementById('ov-ico').textContent=ico;
+  document.getElementById('ov-title').textContent=ttl;
+  document.getElementById('ov-desc').textContent=dsc;
+  const el=document.getElementById('ov-choices');
+  el.innerHTML=chs.map((c,i)=>`<button class="oc ${c.cls||''}" data-i="${i}">${c.t}</button>`).join('');
+  el.querySelectorAll('.oc').forEach((btn,i)=>btn.addEventListener('click',()=>chs[i].cb()));
+  document.getElementById('ov').classList.add('on');
+}
+function closeOv(){document.getElementById('ov').classList.remove('on');G.paused=false;}
+
+/* ═══ QUESTS ═══ */
+function checkQ(){
+  G.quests.forEach(q=>{
+    if(!q.done&&q.chk()){
+      q.done=true;
+      const r=q.rew;
+      if(r.gold)G.res.gold=Math.min(G.cap,G.res.gold+r.gold);
+      if(r.wood)G.res.wood=Math.min(G.cap,G.res.wood+r.wood);
+      if(r.xp)gainXP(r.xp);
+      setMsg('✅ Quête accomplie : '+q.nm+' !','g');
+      floatCenter('✅ '+q.nm,'#5dba78');
+    }
+  });
+  renderQ();
+}
+function renderQ(){
+  const list=document.getElementById('q-list');
+  const active=G.quests.filter(q=>!q.done).slice(0,4);
+  const done=G.quests.filter(q=>q.done).slice(-2);
+  list.innerHTML=[...active,...done].map(q=>
+    q.done
+    ?`<div class="qi done"><span class="qi-ico">✅</span><div><div class="qi-name">${q.nm}</div></div></div>`
+    :`<div class="qi"><span class="qi-ico">${q.ico}</span><div><div class="qi-name">${q.nm}</div><div class="qi-desc">${q.dsc}</div></div></div>`
+  ).join('');
+}
+
+/* ═══ RENDER ═══ */
+function renderTop(){
+  const rates={gold:0,food:0,wood:0};
+  Object.entries(G.bld).forEach(([idx,bk])=>{
+    const p=B[bk].d.prod;const lv=G.lv[idx]||1;
+    if(p.gold)rates.gold+=p.gold*lv;
+    if(p.food)rates.food+=p.food*lv;
+    if(p.wood)rates.wood+=p.wood*lv;
+  });
+  const keys=['gold','food','wood','pop','defense'];
+  document.getElementById('res-bar').innerHTML=keys.map(k=>{
+    const r=rates[k]||0;
+    const rHtml=r!==undefined?`<span class="ri-rate ${r>0?'p':r<0?'n':'z'}">${r>0?'+':''}${r||0}/tour</span>`:'';
+    return`<div class="ri"><span class="ri-ico">${ICONS[k]}</span><div class="ri-info"><span class="ri-lbl">${RNAME[k]}</span><span class="ri-val">${Math.round(G.res[k]||0)}</span>${rHtml}</div></div>`;
+  }).join('')+`<div class="ri"><span class="ri-ico">📦</span><div class="ri-info"><span class="ri-lbl">Capacité</span><span class="ri-val">${G.cap}</span></div></div>`;
+  const ld=lvData();
+  document.getElementById('xp-lv').textContent='NIVEAU '+ld.lv;
+  document.getElementById('xp-pts').textContent=ld.cur+' / '+ld.need+' XP';
+  document.getElementById('xp-fill').style.width=ld.pct+'%';
+}
 function renderMap(){
   const map=document.getElementById('map');
-  const sz=Math.min(58, Math.floor((window.innerWidth-290)/COLS - 3));
-  map.style.gridTemplateColumns=`repeat(${COLS}, ${sz}px)`;
+  const sz=Math.min(60,Math.floor((innerWidth-290)/COLS-4));
+  map.style.gridTemplateColumns=`repeat(${COLS},${sz}px)`;
+  map.style.gridTemplateRows=`repeat(${ROWS},${sz}px)`;
   let html='';
-  S.terrain.forEach((t,i)=>{
-    const b=S.buildings[i];
-    const ti=TERRAIN_INFO[t];
-    const icon=b?BUILDINGS[b].icon:ti.icon;
-    const sel=S.selected===i?'selected':'';
-    html+=`<div class="cell ${ti.color} ${sel}" data-i="${i}" title="${ti.label}">${icon}</div>`;
+  G.terrain.forEach((t,i)=>{
+    const bk=G.bld[i];const ti=TR[t];
+    const ico=bk?B[bk].ico:ti.ico;
+    const sel=G.sel===i?'sel':'';
+    let hpEl='',lvEl='',blkEl='',atkEl='';
+    if(bk){
+      const maxHp=Math.round(B[bk].d.hp*(1+((G.lv[i]||1)-1)*0.5));
+      const cur=G.hp[i]||maxHp;
+      const pct=Math.max(0,Math.min(100,cur/maxHp*100));
+      const col=pct>60?'#27ae60':pct>30?'#f39c12':'#e74c3c';
+      hpEl=`<div class="c-hp"><div class="c-hp-f" style="width:${pct}%;background:${col}"></div></div>`;
+      const lv=G.lv[i]||1;if(lv>1)lvEl=`<div class="c-lv">${lv}</div>`;
+      let blocked=false;
+      Object.entries(B[bk].d.needs||{}).forEach(([k,v])=>{if((G.res[k]||0)<v)blocked=true;});
+      if(blocked)blkEl=`<div class="c-block">⚠️</div>`;
+    }
+    if(G.enemies.some(e=>e.idx===i))atkEl=`<div class="c-atk">⚔️</div>`;
+    html+=`<div class="cell ${ti.cls} ${sel}" data-i="${i}">${ico}${hpEl}${lvEl}${blkEl}${atkEl}</div>`;
   });
   map.innerHTML=html;
   map.querySelectorAll('.cell').forEach(el=>{
     el.addEventListener('click',()=>{
-      S.selected=parseInt(el.dataset.i);
-      renderSidebar();
-      map.querySelectorAll('.cell').forEach(c=>c.classList.remove('selected'));
-      el.classList.add('selected');
+      G.sel=parseInt(el.dataset.i);
+      map.querySelectorAll('.cell').forEach(c=>c.classList.remove('sel'));
+      el.classList.add('sel');
+      renderSB();
     });
   });
 }
-
-function renderSidebar(){
-  const i=S.selected;
-  const title=document.getElementById('sidebar-title');
-  const sub=document.getElementById('sidebar-sub');
-  const body=document.getElementById('sidebar-body');
+function renderSB(){
+  const i=G.sel;
+  const title=document.getElementById('sb-title');
+  const sub=document.getElementById('sb-sub');
+  const body=document.getElementById('sb-body');
   if(i===null){
-    title.textContent='Sélectionne une case';
-    sub.textContent='Clique sur la carte';
-    body.innerHTML='<p class="empty-hint">← Clique sur n\'importe<br>quelle case de la carte<br>pour commencer.</p>';
-    return;
+    title.textContent='Sélectionne une case';sub.textContent='Clique sur la carte';
+    body.innerHTML='<p class="hint">Clique sur n\'importe quelle case de la carte.</p>';return;
   }
-  const t=S.terrain[i];
-  const ti=TERRAIN_INFO[t];
-  const bk=S.buildings[i];
-  title.textContent=ti.icon+' '+ti.label;
+  const t=G.terrain[i];const ti=TR[t];
+  title.textContent=ti.ico+' '+ti.lbl;
+  const bk=G.bld[i];
   if(bk){
-    const b=BUILDINGS[bk];
-    sub.textContent='Bâtiment présent';
-    let html=`
-      <div style="text-align:center;font-size:42px;margin:8px 0">${b.icon}</div>
-      <div style="text-align:center;font-family:'Cinzel',serif;font-size:18px;color:var(--gold2);font-weight:600;margin-bottom:8px">${b.name}</div>
-      <p style="font-size:13px;color:var(--text2);font-style:italic;text-align:center;margin-bottom:12px">${b.desc}</p>
-      <div class="bstat"><span class="bstat-label">Production</span><span class="bstat-val">${fmtProd(b.prod)}</span></div>
-      <div class="bstat"><span class="bstat-label">Consommation</span><span class="bstat-val">${fmtNeeds(b.needs)}</span></div>
-      <div style="margin-top:12px">
-        <button class="demolish-btn" onclick="demolish(${i})">🗑️ Démolir ce bâtiment</button>
-      </div>`;
-    body.innerHTML=html;
+    const b=B[bk];const lv=G.lv[i]||1;
+    const maxHp=Math.round(b.d.hp*(1+(lv-1)*0.5));
+    const cur=G.hp[i]||maxHp;
+    const hpPct=Math.max(0,Math.min(100,cur/maxHp*100));
+    const hpCol=hpPct>60?'#27ae60':hpPct>30?'#f39c12':'#e74c3c';
+    const prodStr=Object.entries(b.d.prod).map(([k,v])=>`+${Math.round(v*lv)} ${ICONS[k]||k}`).join(' · ');
+    const needStr=Object.keys(b.d.needs||{}).length
+      ?Object.entries(b.d.needs).map(([k,v])=>v+' '+ICONS[k]).join(' · '):'Aucune';
+    const uc=lv<3?{gold:Math.round(b.d.cost.gold*1.5*lv),wood:Math.round((b.d.cost.wood||0)*1.5*lv)}:null;
+    const ucStr=uc?Object.entries(uc).filter(([k,v])=>v>0).map(([k,v])=>v+' '+ICONS[k]).join(' · '):'';
+    const dots=[1,2,3].map(n=>`<span class="lv-dot ${n<=lv?'on':''}"></span>`).join('');
+    sub.textContent='Bâtiment actif — Niveau '+lv;
+    body.innerHTML=`
+      <div class="b-portrait">
+        <div class="b-ico">${b.ico}</div>
+        <div class="b-name">${b.nm}</div>
+        <div class="b-lv">${dots}</div>
+      </div>
+      <div class="b-desc">${b.desc}</div>
+      <div class="slbl">Points de vie</div>
+      <div class="hp-sb"><div class="hp-sb-f" style="width:${hpPct}%;background:${hpCol}"></div></div>
+      <div class="hp-txt"><span>${cur} PV</span><span>${maxHp} max</span></div>
+      <div class="srow"><span>Production / tour</span><span>${prodStr}</span></div>
+      <div class="srow"><span>Consommation</span><span>${needStr}</span></div>
+      ${uc?`<button class="abtn upg" ${afford(uc)?'':'disabled'} onclick="doUpg(${i})">⬆ Améliorer — ${ucStr}</button>`
+         :`<div style="text-align:center;font-size:10px;color:var(--gold-dim);padding:4px;font-family:'Cinzel',serif;letter-spacing:1px">★ NIVEAU MAXIMUM</div>`}
+      <button class="abtn dem" onclick="doDemo(${i})">🗑 Démolir (+${Math.floor((b.d.cost.gold||0)*0.4)} 🪙)</button>`;
   } else {
     sub.textContent='Case vide';
-    const allowed=Object.entries(BUILDINGS).filter(([bk,b])=>b.terrain.includes(t));
-    if(!allowed.length){body.innerHTML='<p class="empty-hint">Aucun bâtiment possible sur ce terrain.</p>';return;}
-    let html=`<div class="section-title">Construire ici</div>`;
+    const allowed=Object.entries(B).filter(([bk,b])=>b.t.includes(t));
+    if(!allowed.length){body.innerHTML='<p class="hint">Aucun bâtiment possible sur ce terrain.</p>';return;}
+    let html=`<div class="slbl">Construire ici</div>`;
     allowed.forEach(([bk,b])=>{
-      const ok=canAfford(b.cost);
-      html+=`<button class="build-btn" ${ok?'':'disabled'} onclick="build(${i},'${bk}')">
-        <span class="bicon">${b.icon}</span>
-        <span class="binfo">
-          <div class="bname">${b.name}</div>
-          <div class="bdesc">${b.desc}</div>
-          <div class="bcost">Coût : ${fmtCost(b.cost)} · Prod : ${fmtProd(b.prod)}</div>
-        </span>
+      const ok=afford(b.d.cost);
+      const cStr=Object.entries(b.d.cost).map(([k,v])=>v+' '+ICONS[k]).join(' · ');
+      const pStr=Object.entries(b.d.prod).map(([k,v])=>'+'+v+' '+(ICONS[k]||k)).join(' · ');
+      html+=`<button class="bbtn" ${ok?'':'disabled'} onclick="doBuild(${i},'${bk}')">
+        <span class="bi">${b.ico}</span>
+        <span class="bd"><div class="bn">${b.nm}</div><div class="bds">${b.desc}</div><div class="bc">💰 ${cStr} &nbsp;·&nbsp; 📈 ${pStr}</div></span>
       </button>`;
     });
     body.innerHTML=html;
   }
 }
+function render(){renderTop();renderMap();renderSB();renderQ();}
 
-function render(){
-  renderTopbar();
-  renderMap();
-  renderSidebar();
+/* ═══ UTILS ═══ */
+function pulse(idx,cls){
+  const el=document.querySelector(`[data-i="${idx}"]`);if(!el)return;
+  el.classList.remove(cls);void el.offsetWidth;el.classList.add(cls);
+  setTimeout(()=>el.classList.remove(cls),600);
 }
-
-document.getElementById('pause-btn').addEventListener('click',()=>{
-  S.paused=!S.paused;
-  document.getElementById('pause-btn').textContent=S.paused?'▶ Reprendre':'⏸ Pause';
-  setMsg(S.paused?'Jeu en pause.':'Jeu repris !');
-});
-
-window.addEventListener('resize',()=>{renderMap();});
-render();
-startTick();
+function floatOnCell(txt,idx,col){
+  const el=document.querySelector(`[data-i="${idx}"]`);if(!el)return;
+  const r=el.getBoundingClientRect();
+  const f=document.createElement('div');f.className='ft';
+  f.textContent=txt;f.style.color=col||'var(--gold2)';
+  f.style.left=(r.left+r.width/2-12)+'px';f.style.top=(r.top-4)+'px';
+  document.body.appendChild(f);setTimeout(()=>f.remove(),1400);
+}
+function floatCenter(txt,col){
+  const f=document.createElement('div');f.className='ft';
+  f.textContent=txt;f.style.color=col||'var(--gold2)';
+  f.style.left='50%';f.style.top='38%';f.style.transform='translateX(-50%)';f.style.fontSize='16px';
+  document.body.appendChild(f);setTimeout(()=>f.remove(),1400);
+}
+let msgT=null;
+function setMsg(t,c=''){
+  const el=document.getElementById('msg');el.textContent=t;el.className=c;
+  if(msgT)clearTimeout(msgT);msgT=setTimeout(()=>el.className='',4000);
+}
+function togglePause(){
+  G.paused=!G.paused;
+  document.getElementById('pbtn').textContent=G.paused?'▶ Reprendre':'⏸ Pause';
+  setMsg(G.paused?'Pause.':'Jeu repris !');
+}
+function askReset(){
+  showOv({ico:'⚠️',ttl:'Recommencer ?',dsc:'Toute ta progression sera perdue.',
+    chs:[
+      {t:'💀 Oui, recommencer',cls:'r',cb(){closeOv();G=mkG();document.getElementById('turn-n').textContent=1;setMsg('Nouveau jeu !','g');render();}},
+      {t:'↩ Annuler',cb(){closeOv();}},
+    ]});
+}
+addEventListener('resize',()=>renderMap());
+render();renderQ();startTick();
 </script>
 </body>
 </html>
