@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hearthland — Jeu de gestion</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #1a1208;
+  --bg2: #221a0e;
+  --bg3: #2e2210;
+  --panel: #1e1609;
+  --gold: #e8b84b;
+  --gold2: #f5d27a;
+  --gold-dim: #7a5e20;
+  --text: #f0dfa8;
+  --text2: #a8906a;
+  --text3: #6a5540;
+  --green: #4a8a3c;
+  --green2: #6db85c;
+  --red: #a03030;
+  --blue: #2a5a8a;
+  --blue2: #4a8abf;
+  --border: rgba(232,184,75,0.2);
+  --border2: rgba(232,184,75,0.4);
+  --radius: 8px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 100%; height: 100%; background: var(--bg); color: var(--text); font-family: 'Crimson Pro', Georgia, serif; overflow: hidden; }
+
+/* ── BACKGROUND ── */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background: radial-gradient(ellipse at 30% 20%, rgba(80,50,10,0.4) 0%, transparent 60%),
+              radial-gradient(ellipse at 70% 80%, rgba(20,40,80,0.3) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+/* ── LAYOUT ── */
+#app { display: flex; flex-direction: column; height: 100vh; position: relative; }
+#header { display: flex; align-items: center; gap: 0; border-bottom: 1px solid var(--border); background: rgba(10,8,2,0.7); backdrop-filter: blur(4px); flex-shrink: 0; }
+#header h1 { font-family: 'Cinzel', serif; font-size: 20px; font-weight: 700; color: var(--gold); letter-spacing: 3px; padding: 10px 20px; border-right: 1px solid var(--border); white-space: nowrap; }
+#resources { display: flex; gap: 0; flex: 1; overflow-x: auto; }
+.res-item { display: flex; align-items: center; gap: 8px; padding: 10px 16px; border-right: 1px solid var(--border); transition: background 0.2s; }
+.res-item:hover { background: rgba(232,184,75,0.05); }
+.res-icon { font-size: 18px; }
+.res-info { display: flex; flex-direction: column; }
+.res-label { font-size: 10px; color: var(--text3); letter-spacing: 1px; text-transform: uppercase; font-family: 'Cinzel', serif; }
+.res-val { font-size: 16px; font-weight: 600; color: var(--gold2); line-height: 1; }
+.res-delta { font-size: 11px; color: var(--green2); }
+.res-delta.neg { color: #e07070; }
+#turn-info { margin-left: auto; padding: 10px 20px; font-family: 'Cinzel', serif; font-size: 13px; color: var(--text2); border-left: 1px solid var(--border); white-space: nowrap; }
+#turn-num { color: var(--gold); font-weight: 600; }
+
+/* ── TICK BAR ── */
+#tickbar { height: 3px; background: var(--bg3); flex-shrink: 0; }
+#tickfill { height: 100%; background: linear-gradient(90deg, var(--gold-dim), var(--gold)); width: 0%; transition: width 0.08s linear; box-shadow: 0 0 6px rgba(232,184,75,0.5); }
+
+/* ── MAIN AREA ── */
+#main { display: flex; flex: 1; overflow: hidden; }
+
+/* ── MAP ── */
+#map-wrap { flex: 1; overflow: auto; display: flex; align-items: center; justify-content: center; padding: 16px; position: relative; }
+#map { display: grid; gap: 3px; }
+.cell {
+  width: 58px; height: 58px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 26px;
+  border: 1.5px solid transparent;
+  transition: transform 0.15s, border-color 0.15s, filter 0.15s, box-shadow 0.15s;
+  position: relative;
+  overflow: visible;
+}
+.cell:hover { transform: scale(1.12); filter: brightness(1.15); z-index: 10; }
+.cell.selected { border-color: var(--gold); box-shadow: 0 0 12px rgba(232,184,75,0.5); transform: scale(1.08); z-index: 10; }
+.cell.pulse { animation: pulse 0.4s ease-out; }
+@keyframes pulse { 0%{transform:scale(1.3);filter:brightness(1.5)} 100%{transform:scale(1);filter:brightness(1)} }
+
+/* terrain colors */
+.t-grass    { background: #1e3d14; }
+.t-forest   { background: #152c0e; }
+.t-water    { background: #0d2440; }
+.t-mountain { background: #302820; }
+.t-desert   { background: #3d2f10; }
+.cell.selected.t-grass    { border-color: #6db85c; box-shadow: 0 0 12px rgba(109,184,92,0.5); }
+.cell.selected.t-forest   { border-color: #4a7a35; box-shadow: 0 0 12px rgba(74,122,53,0.5); }
+.cell.selected.t-water    { border-color: #4a8abf; box-shadow: 0 0 12px rgba(74,138,191,0.5); }
+.cell.selected.t-mountain { border-color: #a09080; box-shadow: 0 0 12px rgba(160,144,128,0.5); }
+.cell.selected.t-desert   { border-color: var(--gold); box-shadow: 0 0 12px rgba(232,184,75,0.5); }
+
+/* ── SIDEBAR ── */
+#sidebar { width: 280px; border-left: 1px solid var(--border); background: rgba(10,8,2,0.6); backdrop-filter: blur(4px); display: flex; flex-direction: column; overflow-y: auto; flex-shrink: 0; }
+#sidebar-header { padding: 14px 16px 10px; border-bottom: 1px solid var(--border); }
+#sidebar-title { font-family: 'Cinzel', serif; font-size: 15px; color: var(--gold); font-weight: 600; }
+#sidebar-sub { font-size: 13px; color: var(--text2); margin-top: 2px; font-style: italic; }
+#sidebar-body { padding: 12px; flex: 1; display: flex; flex-direction: column; gap: 8px; }
+.build-btn {
+  background: rgba(232,184,75,0.05);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  color: var(--text);
+  transition: background 0.2s, border-color 0.2s, transform 0.1s;
+  display: flex; align-items: center; gap: 10px;
+}
+.build-btn:hover:not(:disabled) { background: rgba(232,184,75,0.12); border-color: var(--border2); transform: translateX(3px); }
+.build-btn:active:not(:disabled) { transform: scale(0.98); }
+.build-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.build-btn .bicon { font-size: 24px; flex-shrink: 0; }
+.build-btn .binfo { flex: 1; }
+.build-btn .bname { font-family: 'Cinzel', serif; font-size: 13px; font-weight: 600; color: var(--gold2); }
+.build-btn .bdesc { font-size: 12px; color: var(--text2); margin-top: 2px; line-height: 1.4; }
+.build-btn .bcost { font-size: 11px; color: var(--text3); margin-top: 4px; }
+.demolish-btn {
+  background: rgba(160,48,48,0.1);
+  border: 1px solid rgba(160,48,48,0.3);
+  border-radius: var(--radius);
+  padding: 8px 12px;
+  cursor: pointer;
+  color: #e07070;
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  width: 100%;
+  transition: background 0.2s;
+}
+.demolish-btn:hover { background: rgba(160,48,48,0.2); }
+.bstat { display: flex; justify-content: space-between; align-items: center; font-size: 13px; padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+.bstat:last-child { border-bottom: none; }
+.bstat-label { color: var(--text2); }
+.bstat-val { color: var(--gold2); font-weight: 600; }
+.badge { display: inline-block; background: rgba(232,184,75,0.15); border: 1px solid var(--border); border-radius: 4px; padding: 2px 8px; font-family: 'Cinzel', serif; font-size: 10px; color: var(--gold); letter-spacing: 1px; text-transform: uppercase; }
+.section-title { font-family: 'Cinzel', serif; font-size: 11px; color: var(--text3); letter-spacing: 2px; text-transform: uppercase; margin: 4px 0 2px; }
+.empty-hint { font-size: 13px; color: var(--text3); font-style: italic; line-height: 1.6; text-align: center; margin-top: 20px; }
+
+/* ── BOTTOM BAR ── */
+#bottombar { border-top: 1px solid var(--border); padding: 6px 16px; background: rgba(10,8,2,0.7); display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+#msg { font-size: 13px; color: var(--text2); font-style: italic; flex: 1; transition: color 0.3s; }
+#msg.good { color: var(--green2); }
+#msg.bad { color: #e07070; }
+#pause-btn { font-family: 'Cinzel', serif; font-size: 12px; color: var(--gold); background: transparent; border: 1px solid var(--border); border-radius: 4px; padding: 4px 12px; cursor: pointer; transition: background 0.2s; }
+#pause-btn:hover { background: rgba(232,184,75,0.1); }
+
+/* ── FLOATING POPUP ── */
+.popup { position: fixed; pointer-events: none; font-family: 'Cinzel', serif; font-size: 13px; font-weight: 600; color: var(--gold2); text-shadow: 0 1px 4px rgba(0,0,0,0.8); animation: floatUp 1.2s ease-out forwards; z-index: 999; }
+@keyframes floatUp { 0%{opacity:1;transform:translateY(0)} 80%{opacity:1} 100%{opacity:0;transform:translateY(-50px)} }
+
+/* ── TOOLTIP ── */
+.tooltip { position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); background: rgba(10,8,2,0.97); border: 1px solid var(--border2); border-radius: 6px; padding: 8px 12px; font-size: 12px; color: var(--text); white-space: nowrap; pointer-events: none; z-index: 100; font-family: 'Cinzel', serif; }
+.tooltip::after { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border: 5px solid transparent; border-top-color: var(--border2); }
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--gold-dim); border-radius: 2px; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="header">
+    <h1>⚜ HEARTHLAND</h1>
+    <div id="resources"></div>
+    <div id="turn-info">Tour <span id="turn-num">1</span></div>
+  </div>
+  <div id="tickbar"><div id="tickfill"></div></div>
+  <div id="main">
+    <div id="map-wrap"><div id="map"></div></div>
+    <div id="sidebar">
+      <div id="sidebar-header">
+        <div id="sidebar-title">Sélectionne une case</div>
+        <div id="sidebar-sub">Clique sur la carte pour construire</div>
+      </div>
+      <div id="sidebar-body"><p class="empty-hint">← Clique sur n'importe<br>quelle case de la carte<br>pour commencer.</p></div>
+    </div>
+  </div>
+  <div id="bottombar">
+    <div id="msg">Bienvenue dans Hearthland — Construis ton empire !</div>
+    <button id="pause-btn">⏸ Pause</button>
+  </div>
+</div>
+
+<script>
+const COLS=10, ROWS=7;
+const RES_DEF={gold:100,food:30,wood:20,pop:2,defense:0};
+const CAP_DEF=80;
+
+const TERRAIN_INFO={
+  grass:  {icon:'🌿',label:'Prairie',   color:'t-grass'},
+  forest: {icon:'🌲',label:'Forêt',     color:'t-forest'},
+  water:  {icon:'💧',label:'Rivière',   color:'t-water'},
+  mountain:{icon:'⛰️',label:'Montagne', color:'t-mountain'},
+  desert: {icon:'🏜️',label:'Désert',   color:'t-desert'},
+};
+const BUILDINGS={
+  farm:      {icon:'🌾',name:'Ferme',       cost:{gold:30},           prod:{food:4},        needs:{},        desc:'Produit de la nourriture chaque tour.',        terrain:['grass','water']},
+  sawmill:   {icon:'🪵',name:'Scierie',     cost:{gold:40,food:5},    prod:{wood:3},        needs:{food:1},  desc:'Récolte le bois des forêts proches.',          terrain:['forest','grass']},
+  mine:      {icon:'⛏️',name:'Mine',        cost:{gold:50,food:5},    prod:{gold:5},        needs:{food:2},  desc:'Extrait l\'or de la roche.',                   terrain:['mountain','desert']},
+  house:     {icon:'🏠',name:'Maison',      cost:{gold:25,wood:8},    prod:{pop:1},         needs:{food:2},  desc:'Attire des habitants. Consomme de la nourriture.',terrain:['grass','forest','desert']},
+  market:    {icon:'🏪',name:'Marché',      cost:{gold:70,wood:15},   prod:{gold:7},        needs:{pop:2},   desc:'Commerce florissant. Nécessite de la population.',terrain:['grass','desert','water']},
+  barracks:  {icon:'⚔️',name:'Caserne',     cost:{gold:90,wood:20},   prod:{defense:3},     needs:{food:3,pop:1},desc:'Entraîne des soldats pour défendre le royaume.',terrain:['mountain','grass']},
+  warehouse: {icon:'🏗️',name:'Entrepôt',   cost:{gold:60,wood:25},   prod:{capacity:30},   needs:{},        desc:'Augmente la capacité de stockage de +30.',     terrain:['grass','forest','desert','mountain']},
+  temple:    {icon:'⛩️',name:'Temple',      cost:{gold:120,wood:30},  prod:{pop:1,gold:3},  needs:{pop:3},   desc:'Centre spirituel. Attire et enrichit le peuple.',terrain:['mountain','grass','desert']},
+};
+const RES_ICONS={gold:'🪙',food:'🌽',wood:'🪵',pop:'👤',defense:'🛡️'};
+const RES_LABELS={gold:'Or',food:'Nourriture',wood:'Bois',pop:'Population',defense:'Défense'};
+
+function rnd(a,b){return a+Math.floor(Math.random()*(b-a+1));}
+function makeTerrain(){
+  const t=[];
+  for(let i=0;i<COLS*ROWS;i++){
+    const r=Math.random();
+    if(r<0.32)t.push('grass');
+    else if(r<0.52)t.push('forest');
+    else if(r<0.65)t.push('water');
+    else if(r<0.80)t.push('mountain');
+    else t.push('desert');
+  }
+  return t;
+}
+
+let S={
+  res:Object.assign({},RES_DEF),
+  capacity:CAP_DEF,
+  terrain:makeTerrain(),
+  buildings:{},
+  selected:null,
+  turn:1,
+  paused:false,
+  tickProgress:0,
+  TICK_MAX:80,
+};
+
+function canAfford(cost){return Object.entries(cost).every(([k,v])=>S.res[k]>=v);}
+
+function build(idx,bk){
+  const b=BUILDINGS[bk];
+  if(!canAfford(b.cost)){setMsg('Pas assez de ressources !','bad');return;}
+  Object.entries(b.cost).forEach(([k,v])=>S.res[k]-=v);
+  S.buildings[idx]=bk;
+  setMsg(b.name+' construite !','good');
+  pulseCell(idx);
+  render();
+}
+function demolish(idx){
+  const bk=S.buildings[idx];if(!bk)return;
+  const b=BUILDINGS[bk];
+  const refund=Math.floor((b.cost.gold||0)*0.4);
+  S.res.gold+=refund;
+  delete S.buildings[idx];
+  setMsg('Bâtiment démoli. +'+refund+' or récupéré.','bad');
+  render();
+}
+
+function doTick(){
+  S.turn++;
+  let pd={gold:0,food:0,wood:0,pop:0,defense:0};
+  let cn={food:0};
+  S.capacity=CAP_DEF;
+  Object.entries(S.buildings).forEach(([idx,bk])=>{
+    const b=BUILDINGS[bk];
+    let ok=true;
+    Object.entries(b.needs||{}).forEach(([k,v])=>{if(S.res[k]<v)ok=false;});
+    if(ok){
+      if(b.prod.food)pd.food+=b.prod.food;
+      if(b.prod.gold)pd.gold+=b.prod.gold;
+      if(b.prod.wood)pd.wood+=b.prod.wood;
+      if(b.prod.pop)pd.pop+=b.prod.pop;
+      if(b.prod.defense)pd.defense+=b.prod.defense;
+      if(b.prod.capacity)S.capacity+=b.prod.capacity;
+      if(b.needs.food)cn.food+=b.needs.food;
+    }
+  });
+  const cap=S.capacity;
+  S.res.gold=Math.min(cap,S.res.gold+pd.gold);
+  S.res.food=Math.min(cap,Math.max(0,S.res.food+pd.food-cn.food));
+  S.res.wood=Math.min(cap,S.res.wood+pd.wood);
+  if(pd.pop>0)S.res.pop=Math.min(20,S.res.pop+pd.pop);
+  S.res.defense=pd.defense;
+  const parts=[];
+  if(pd.gold)parts.push('+'+pd.gold+'🪙');
+  if(pd.food-cn.food>0)parts.push('+'+(pd.food-cn.food)+'🌽');
+  if(pd.wood)parts.push('+'+pd.wood+'🪵');
+  if(parts.length)setMsg('Tour '+S.turn+' — '+parts.join(' '),'good');
+  else setMsg('Tour '+S.turn+' — Aucune production.');
+  if(parts.length)spawnPopup(parts.join('  '));
+  render();
+}
+
+let tickTimer=null;
+function startTick(){
+  if(tickTimer)clearInterval(tickTimer);
+  tickTimer=setInterval(()=>{
+    if(S.paused)return;
+    S.tickProgress++;
+    document.getElementById('tickfill').style.width=(S.tickProgress/S.TICK_MAX*100)+'%';
+    if(S.tickProgress>=S.TICK_MAX){S.tickProgress=0;doTick();}
+  },50);
+}
+
+function pulseCell(idx){
+  const el=document.querySelector('[data-i="'+idx+'"]');
+  if(!el)return;
+  el.classList.remove('pulse');
+  void el.offsetWidth;
+  el.classList.add('pulse');
+}
+
+function spawnPopup(text){
+  const el=document.createElement('div');
+  el.className='popup';
+  el.textContent=text;
+  const mw=document.getElementById('map-wrap');
+  const r=mw.getBoundingClientRect();
+  el.style.left=(r.left+r.width/2-60)+'px';
+  el.style.top=(r.top+80)+'px';
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(),1200);
+}
+
+let msgTimer=null;
+function setMsg(t,cls=''){
+  const el=document.getElementById('msg');
+  el.textContent=t;
+  el.className=cls;
+  if(msgTimer)clearTimeout(msgTimer);
+  msgTimer=setTimeout(()=>{el.className='';},3000);
+}
+
+function fmtCost(cost){
+  return Object.entries(cost).map(([k,v])=>v+' '+RES_ICONS[k]).join(' · ');
+}
+function fmtProd(prod){
+  return Object.entries(prod).map(([k,v])=>'+'+v+' '+(RES_ICONS[k]||k)).join(' · ');
+}
+function fmtNeeds(needs){
+  if(!Object.keys(needs).length)return 'Aucune';
+  return Object.entries(needs).map(([k,v])=>v+' '+RES_ICONS[k]).join(' · ');
+}
+
+function renderTopbar(){
+  const keys=['gold','food','wood','pop','defense'];
+  let html='';
+  keys.forEach(k=>{
+    html+=`<div class="res-item">
+      <div class="res-icon">${RES_ICONS[k]}</div>
+      <div class="res-info">
+        <div class="res-label">${RES_LABELS[k]}</div>
+        <div class="res-val">${Math.round(S.res[k])}</div>
+      </div>
+    </div>`;
+  });
+  html+=`<div class="res-item"><div class="res-icon">📦</div><div class="res-info"><div class="res-label">Capacité</div><div class="res-val">${S.capacity}</div></div></div>`;
+  document.getElementById('resources').innerHTML=html;
+  document.getElementById('turn-num').textContent=S.turn;
+}
+
+function renderMap(){
+  const map=document.getElementById('map');
+  const sz=Math.min(58, Math.floor((window.innerWidth-290)/COLS - 3));
+  map.style.gridTemplateColumns=`repeat(${COLS}, ${sz}px)`;
+  let html='';
+  S.terrain.forEach((t,i)=>{
+    const b=S.buildings[i];
+    const ti=TERRAIN_INFO[t];
+    const icon=b?BUILDINGS[b].icon:ti.icon;
+    const sel=S.selected===i?'selected':'';
+    html+=`<div class="cell ${ti.color} ${sel}" data-i="${i}" title="${ti.label}">${icon}</div>`;
+  });
+  map.innerHTML=html;
+  map.querySelectorAll('.cell').forEach(el=>{
+    el.addEventListener('click',()=>{
+      S.selected=parseInt(el.dataset.i);
+      renderSidebar();
+      map.querySelectorAll('.cell').forEach(c=>c.classList.remove('selected'));
+      el.classList.add('selected');
+    });
+  });
+}
+
+function renderSidebar(){
+  const i=S.selected;
+  const title=document.getElementById('sidebar-title');
+  const sub=document.getElementById('sidebar-sub');
+  const body=document.getElementById('sidebar-body');
+  if(i===null){
+    title.textContent='Sélectionne une case';
+    sub.textContent='Clique sur la carte';
+    body.innerHTML='<p class="empty-hint">← Clique sur n\'importe<br>quelle case de la carte<br>pour commencer.</p>';
+    return;
+  }
+  const t=S.terrain[i];
+  const ti=TERRAIN_INFO[t];
+  const bk=S.buildings[i];
+  title.textContent=ti.icon+' '+ti.label;
+  if(bk){
+    const b=BUILDINGS[bk];
+    sub.textContent='Bâtiment présent';
+    let html=`
+      <div style="text-align:center;font-size:42px;margin:8px 0">${b.icon}</div>
+      <div style="text-align:center;font-family:'Cinzel',serif;font-size:18px;color:var(--gold2);font-weight:600;margin-bottom:8px">${b.name}</div>
+      <p style="font-size:13px;color:var(--text2);font-style:italic;text-align:center;margin-bottom:12px">${b.desc}</p>
+      <div class="bstat"><span class="bstat-label">Production</span><span class="bstat-val">${fmtProd(b.prod)}</span></div>
+      <div class="bstat"><span class="bstat-label">Consommation</span><span class="bstat-val">${fmtNeeds(b.needs)}</span></div>
+      <div style="margin-top:12px">
+        <button class="demolish-btn" onclick="demolish(${i})">🗑️ Démolir ce bâtiment</button>
+      </div>`;
+    body.innerHTML=html;
+  } else {
+    sub.textContent='Case vide';
+    const allowed=Object.entries(BUILDINGS).filter(([bk,b])=>b.terrain.includes(t));
+    if(!allowed.length){body.innerHTML='<p class="empty-hint">Aucun bâtiment possible sur ce terrain.</p>';return;}
+    let html=`<div class="section-title">Construire ici</div>`;
+    allowed.forEach(([bk,b])=>{
+      const ok=canAfford(b.cost);
+      html+=`<button class="build-btn" ${ok?'':'disabled'} onclick="build(${i},'${bk}')">
+        <span class="bicon">${b.icon}</span>
+        <span class="binfo">
+          <div class="bname">${b.name}</div>
+          <div class="bdesc">${b.desc}</div>
+          <div class="bcost">Coût : ${fmtCost(b.cost)} · Prod : ${fmtProd(b.prod)}</div>
+        </span>
+      </button>`;
+    });
+    body.innerHTML=html;
+  }
+}
+
+function render(){
+  renderTopbar();
+  renderMap();
+  renderSidebar();
+}
+
+document.getElementById('pause-btn').addEventListener('click',()=>{
+  S.paused=!S.paused;
+  document.getElementById('pause-btn').textContent=S.paused?'▶ Reprendre':'⏸ Pause';
+  setMsg(S.paused?'Jeu en pause.':'Jeu repris !');
+});
+
+window.addEventListener('resize',()=>{renderMap();});
+render();
+startTick();
+</script>
+</body>
+</html>
